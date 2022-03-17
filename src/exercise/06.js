@@ -16,25 +16,24 @@ import {
 function PokemonInfo({pokemonName}) {
   // Gets called whenever we submit a new pokemon
   const [pokemon, setPokemon] = React.useState(null)
+  const [status, setStatus] = React.useState('idle')
   const [error, setError] = React.useState(null)
 
   React.useEffect(() => {
-    async function fetchAndSet() {
-      if (!pokemonName.length) return
-      setPokemon(null)
-      setError(null)
-      try {
-        const pokemonData = await fetchPokemon(pokemonName)
-        setPokemon(pokemonData)
-      } catch (e) {
+    if (!pokemonName) return
+    setStatus('pending')
+    fetchPokemon(pokemonName)
+      .then(pokemon => {
+        setPokemon(pokemon)
+        setStatus('resolved')
+      })
+      .catch(e => {
         setError(e)
-      }
-    }
-
-    fetchAndSet()
+        setStatus('rejected')
+      })
   }, [pokemonName])
 
-  if (error)
+  if (status === 'rejected')
     return (
       <div role="alert">
         {' '}
@@ -42,9 +41,13 @@ function PokemonInfo({pokemonName}) {
         <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>{' '}
       </div>
     )
-  else if (!pokemonName.length) return 'Submit a pokemon'
-  else if (!pokemon) return <PokemonInfoFallback name={pokemonName} />
-  else return <PokemonDataView pokemon={pokemon} />
+  else if (status === 'idle') {
+    return 'Submit a pokemon'
+  } else if (status === 'pending')
+    return <PokemonInfoFallback name={pokemonName} />
+  else if (status === 'resolved') {
+    return <PokemonDataView pokemon={pokemon} />
+  }
 }
 
 function App() {
