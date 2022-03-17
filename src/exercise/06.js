@@ -18,21 +18,21 @@ function PokemonInfo({pokemonName}) {
   const [pokemon, setPokemon] = React.useState(null)
   const [error, setError] = React.useState(null)
 
-  React.useEffect(
-    function fetch() {
+  React.useEffect(() => {
+    async function fetchAndSet() {
       if (!pokemonName.length) return
       setPokemon(null)
-      fetchPokemon(pokemonName)
-        .then(pokemonData => {
-          // update the state
-          setPokemon(pokemonData)
-        })
-        .catch(err => {
-          setError(err)
-        })
-    },
-    [pokemonName],
-  )
+      setError(null)
+      try {
+        const pokemonData = await fetchPokemon(pokemonName)
+        setPokemon(pokemonData)
+      } catch (e) {
+        setError(e)
+      }
+    }
+
+    fetchAndSet()
+  }, [pokemonName])
 
   if (error)
     return (
